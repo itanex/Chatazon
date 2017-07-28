@@ -44,8 +44,8 @@ namespace Chatazon
 
             // Add framework services.
             services.AddDbContext<Data.ApplicationDbContext>(options => {
-                options.UseSqlServer(Configuration.GetConnectionString("SQLServer"));
-                //options.UseMySql(Configuration.GetConnectionString("MySQL"));
+                //options.UseSqlServer(Configuration.GetConnectionString("SQLServer"));
+                options.UseMySql(Configuration.GetConnectionString("MySQL"));
             });
 
             // Add nuget Microsoft.AspNetCore.Identity

@@ -22,14 +22,14 @@ namespace Chatazon.Data
 
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
+        public DbSet<Message> Message { get; set; }
+
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
         {
 
         }
-
-        public DbSet<Message> Message { get; set; }
-
+        
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
@@ -37,12 +37,12 @@ namespace Chatazon.Data
             // For example, you can rename the ASP.NET Identity table names and more.
             // Add your customizations after calling base.OnModelCreating(builder);
 
-            builder.Entity<Message>()
-                .ToTable("Message")
-                .Property(m => m.DateCreated)
-                //.HasDefaultValueSql("strftime('%Y-%m-%d %H:%M:%S')")
-                .HasDefaultValue<DateTime>(DateTime.UtcNow)
-                ;
+            //builder.Entity<Message>()
+            //    .ToTable("Message")
+            //    .Property(m => m.DateCreated)
+            //    //.HasDefaultValueSql("strftime('%Y-%m-%d %H:%M:%S')")
+            //    .HasDefaultValue<DateTime>(DateTime.UtcNow)
+            //    ;
         }
     }
 }

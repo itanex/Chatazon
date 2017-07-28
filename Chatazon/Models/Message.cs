@@ -6,8 +6,8 @@ namespace Chatazon.Models
 {
     public class Message
     {
-        [Key]
-        public int MessageId { get; set; }
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public int Id { get; set; }
 
         [Required]
         public string Content { get; set; }
@@ -19,8 +19,7 @@ namespace Chatazon.Models
         public ApplicationUser User { get; set; }
 
         [Required]
-        [DataType(DataType.Date)]
-        [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
+        [Timestamp]
         public DateTime DateCreated { get; set; }
     }
 }
