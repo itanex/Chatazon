@@ -1,19 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-
-
-
-// using Microsoft.EntityFrameworkCore.Sqlite;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore;
 
 
 namespace Chatazon
@@ -51,14 +43,13 @@ namespace Chatazon
 
 
             // Add framework services.
-            services.AddDbContext<Data.ApplicationDbContext>(options =>
-                options.UseSqlite(Configuration.GetConnectionString("DefaultConnection"))
-            );
+            services.AddDbContext<Data.ApplicationDbContext>(options => {
+                options.UseSqlServer(Configuration.GetConnectionString("SQLServer"));
+                //options.UseMySql(Configuration.GetConnectionString("MySQL"));
+            });
 
-            // Add nuget Microsoft.AspNetCore.Identity;
-            
+            // Add nuget Microsoft.AspNetCore.Identity
 
-            
             services.AddIdentity<Models.ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<Data.ApplicationDbContext>()
                 .AddDefaultTokenProviders();

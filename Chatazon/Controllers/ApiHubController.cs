@@ -16,7 +16,7 @@ namespace Chatazon.Controllers
         public IGroupManager Groups { get; private set; }
         protected ApiHubController(IConnectionManager signalRConnectionManager)
         {
-            var _hub = signalRConnectionManager.GetHubContext<T>();
+            _hub = signalRConnectionManager.GetHubContext<T>();
             Clients = _hub.Clients;
             Groups = _hub.Groups;
         }
