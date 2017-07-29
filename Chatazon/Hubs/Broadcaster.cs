@@ -1,6 +1,5 @@
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR;
-using Chatazon.Models;
+using System.Threading.Tasks;
 
 namespace Chatazon.Hubs
 {
@@ -22,12 +21,5 @@ namespace Chatazon.Hubs
         {
             return Groups.Remove(Context.ConnectionId, chatroom.ToString());
         }
-    }
-
-    // Client side methods to be invoked by Broadcaster Hub
-    public interface IBroadcaster
-    {
-        Task SetConnectionId(string connectionId);
-        Task AddChatMessage(MessageViewModel message);
     }
 }
