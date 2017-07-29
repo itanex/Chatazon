@@ -14,67 +14,68 @@ using Microsoft.AspNetCore.SignalR.Server;
 using Chatazon.Data;
 using Chatazon.Models;
 using Chatazon.Hubs;
+using Chatazon.Services;
 
 namespace Chatazon.Controllers
 {
-    [Produces("application/json")]
-    public class ChatroomController : ApiHubController<Broadcaster>
+    public class ChatroomController : HubController<Broadcaster>
     {
         private readonly UserManager<ApplicationUser> _userManager;
-        private ApplicationDbContext _context;
+        private ChatService _chatService;
 
-        public ChatroomController(UserManager<ApplicationUser> userManager, ApplicationDbContext ctx, IConnectionManager connectionManager)
-        : base(connectionManager)
+        public ChatroomController(
+                UserManager<ApplicationUser> userManager,
+                ChatService chatService,
+                IConnectionManager connectionManager)
+            : base(connectionManager)
         {
             _userManager = userManager;
-            _context = ctx;
+            _chatService = chatService;
         }
 
-        private Task<ApplicationUser> GetCurrentUserAsync() => _userManager.GetUserAsync(HttpContext.User);
+        private async Task<ApplicationUser> GetCurrentUserAsync() => await _userManager.GetUserAsync(User);
 
         [HttpGet]
         [Route("[controller]")]
         public async Task<IActionResult> Get()
         {
-            Message[] messages = await _context.Message.Include(m => m.User).ToArrayAsync();
-            List<MessageViewModel> model = new List<MessageViewModel>();
-            foreach(Message msg in messages)
+            var messages = await _chatService.GetAllMessages();
+
+            if (messages == null)
             {
-                model.Add(new MessageViewModel(msg));
+                return StatusCode(500, "Received a null respose from Chat Service");
             }
-            return Json(model);
+
+            return Ok(messages.Select(x => new MessageViewModel(x)));
         }
 
+        [Authorize]
         [HttpPost]
         [Route("[controller]")]
         public async Task<IActionResult> Post([FromBody]NewMessageViewModel message)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                // Get the current user
-                var user = await GetCurrentUserAsync();
-                if (user == null) return Forbid();
-
-                // Create a new message to save to the database
-                Message newMessage = new Message()
-                {
-                    Content = message.Content,
-                    UserId = user.Id,
-                    User = user
-                };
-
-                // Save the new message
-                await _context.AddAsync(newMessage);
-                await _context.SaveChangesAsync();
-
-                MessageViewModel model = new MessageViewModel(newMessage);
-
-                // Call the client method 'addChatMessage' on all clients in the
-                // "MainChatroom" group.
-                this.Clients.Group("MainChatroom").AddChatMessage(model);
-                return new NoContentResult();
+                return BadRequest(ModelState);
             }
-            return BadRequest(ModelState);
+
+            // Get the current user
+            var user = await GetCurrentUserAsync();
+
+            // Create a new message to save to the database
+            var newMessage = new Message()
+            {
+                Content = message.Content,
+                UserId = user.Id,
+                User = user
+            };
+
+            var record = await _chatService.SaveMessage(newMessage);
+
+            // Call the client method 'addChatMessage' on all clients in the "MainChatroom" group.
+            this.Clients.Group("MainChatroom").AddChatMessage(new MessageViewModel(record));
+
+            return new NoContentResult();
         }
     }
 }

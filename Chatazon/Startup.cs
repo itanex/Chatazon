@@ -1,4 +1,7 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using Chatazon.Data;
+using Chatazon.Models;
+using Chatazon.Services;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -6,7 +9,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-
 
 namespace Chatazon
 {
@@ -20,14 +22,6 @@ namespace Chatazon
                 .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true)
                 .AddEnvironmentVariables();
 
-
-            // nuget Microsoft.Extensions.Configuration.UserSecrets
-            if (env.IsDevelopment())
-            {
-                // For more details on using the user secret store see https://go.microsoft.com/fwlink/?LinkID=532709
-                // builder.AddUserSecrets();
-            }
-
             Configuration = builder.Build();
         }
 
@@ -36,52 +30,49 @@ namespace Chatazon
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-
-            // Add reference Microsoft.EntityFrameworkCore 
-
-            // https://docs.microsoft.com/en-us/aspnet/core/data/ef-mvc/migrations
-
-
             // Add framework services.
-            services.AddDbContext<Data.ApplicationDbContext>(options => {
+            services.AddDbContext<Data.ApplicationDbContext>(options =>
+            {
                 //options.UseSqlServer(Configuration.GetConnectionString("SQLServer"));
                 options.UseMySql(Configuration.GetConnectionString("MySQL"));
             });
-
-            // Add nuget Microsoft.AspNetCore.Identity
-
-            services.AddIdentity<Models.ApplicationUser, IdentityRole>()
-                .AddEntityFrameworkStores<Data.ApplicationDbContext>()
-                .AddDefaultTokenProviders();
             
+            services.AddIdentity<ApplicationUser, IdentityRole>()
+                .AddEntityFrameworkStores<ApplicationDbContext>()
+                .AddDefaultTokenProviders();
+
 
             JsonSerializerSettings settings = new JsonSerializerSettings();
             settings.ContractResolver = new SignalRContractResolver();
 
             JsonSerializer serializer = JsonSerializer.Create(settings);
-            
+
             services.Add(new ServiceDescriptor(typeof(JsonSerializer),
                 provider => serializer,
                 ServiceLifetime.Transient)
             );
 
-            services.AddSignalR(options => options.Hubs.EnableDetailedErrors = true);
+            services.AddSignalR(options =>
+            {
+                options.Hubs.EnableDetailedErrors = true;
+            });
 
             services.AddMvc();
 
             // Add application services.
-            services.AddTransient<Services.IEmailSender, Services.AuthMessageSender>();
-            services.AddTransient<Services.ISmsSender, Services.AuthMessageSender>();
+            services.AddTransient<ChatService>();
+            services.AddTransient<IEmailSender, AuthMessageSender>();
+            services.AddTransient<ISmsSender, AuthMessageSender>();
         }
 
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory, Data.ApplicationDbContext dbContext)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory, ApplicationDbContext dbContext)
         {
             loggerFactory.AddConsole(Configuration.GetSection("Logging"));
             loggerFactory.AddDebug();
 
-            Data.DbInitializer.Initialize(dbContext);
+            DbInitializer.Initialize(dbContext);
 
             if (env.IsDevelopment())
             {
@@ -94,17 +85,8 @@ namespace Chatazon
             }
 
             app.UseStaticFiles();
-
-
             app.UseIdentity();
-
-            app.UseMvc(routes =>
-            {
-                routes.MapRoute(
-                    name: "default",
-                    template: "{controller=Home}/{action=Index}/{id?}");
-            });
-
+            app.UseMvcWithDefaultRoute();
 
             app.UseWebSockets();
             app.UseSignalR();

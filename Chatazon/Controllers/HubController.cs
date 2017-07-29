@@ -1,20 +1,18 @@
 using Microsoft.AspNetCore.Mvc;
-
-
-
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.AspNetCore.SignalR.Infrastructure;
 using Microsoft.AspNetCore.SignalR.Hubs;
+using Microsoft.AspNetCore.SignalR.Infrastructure;
 
 namespace Chatazon.Controllers
 {
-    public abstract class ApiHubController<T> : Controller
+    public abstract class HubController<T> : Controller
         where T : Hub
     {
         private readonly IHubContext _hub;
         public IHubConnectionContext<dynamic> Clients { get; private set; }
         public IGroupManager Groups { get; private set; }
-        protected ApiHubController(IConnectionManager signalRConnectionManager)
+
+        protected HubController(IConnectionManager signalRConnectionManager)
         {
             _hub = signalRConnectionManager.GetHubContext<T>();
             Clients = _hub.Clients;
