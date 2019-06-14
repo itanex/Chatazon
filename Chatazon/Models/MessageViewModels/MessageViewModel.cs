@@ -10,13 +10,6 @@ namespace Chatazon.Models
     // return only the UserName of the ApplicationUser who wrote the message.
     public class MessageViewModel
     {
-        public MessageViewModel() { }
-        public MessageViewModel(Message message)
-        {
-            Content = message.Content;
-            Author = message.User.UserName;
-            Timestamp = message.DateCreated;
-        }
         [Required]
         public string Content { get; set; }
 
@@ -26,5 +19,16 @@ namespace Chatazon.Models
         [Required]
         [DataType(DataType.Date)]
         public DateTime Timestamp { get; set; }
+
+        public MessageViewModel()
+        {
+        }
+
+        public MessageViewModel(Message message)
+        {
+            Content = message.Content;
+            Author = message.User.UserName;
+            Timestamp = message.DateCreated;
+        }
     }
 }
